@@ -2,6 +2,8 @@ import requests
 import time
 import os
 from twilio.rest import Client
+from flask import Flask
+from threading import Thread
 
 # =========================
 # 🔐 LOAD ENV VARIABLES
@@ -16,6 +18,23 @@ TWILIO_PHONE = os.getenv("TWILIO_PHONE")
 YOUR_PHONE = os.getenv("YOUR_PHONE")
 
 URL = "https://shop.royalchallengers.com"
+
+# =========================
+# 🌐 KEEP ALIVE SERVER
+# =========================
+
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "RCB Bot Running"
+
+def run():
+    app.run(host='0.0.0.0', port=8080)
+
+def keep_alive():
+    t = Thread(target=run)
+    t.start()
 
 # =========================
 # 📲 TELEGRAM FUNCTION
@@ -59,11 +78,9 @@ def check_tickets():
         final_url = res.url.lower()
         text = res.text.lower()
 
-        # 🔥 Detect redirect to Ticketgenie
         if "ticketgenie" in final_url:
             return "REDIRECT"
 
-        # 🔥 Detect ticket-related content
         if "tickets" in text or "book now" in text:
             return "CONTENT"
 
@@ -74,8 +91,10 @@ def check_tickets():
         return "ERROR"
 
 # =========================
-# 🚀 MAIN LOOP
+# 🚀 MAIN BOT
 # =========================
+
+keep_alive()   # 🔥 keeps bot awake
 
 already_alerted = False
 
@@ -97,4 +116,4 @@ while True:
     except Exception as e:
         print("Main loop error:", e)
 
-    time.sleep(10)  # ⚡ 10 sec interval
+    time.sleep(10)
