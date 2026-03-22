@@ -105,7 +105,7 @@ while True:
         status = check_tickets()
         print("Status:", status)
 
-        if status in ["REDIRECT", "CONTENT"] and not already_alerted:
+        if true:
             msg = "🚨 RCB TICKETS MAY BE LIVE!\n\nCheck now:\nhttps://shop.royalchallengers.com"
 
             send_telegram(msg)
