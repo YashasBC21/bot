@@ -4,7 +4,7 @@ import os
 from twilio.rest import Client
 
 # =========================
-# 🔐 LOAD ENV VARIABLES
+# LOAD ENV VARIABLES
 # =========================
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -15,55 +15,84 @@ TWILIO_AUTH = os.getenv("TWILIO_AUTH")
 TWILIO_PHONE = os.getenv("TWILIO_PHONE")
 YOUR_PHONE = os.getenv("YOUR_PHONE")
 
+URL = "https://shop.royalchallengers.com"
+
 # =========================
-# 📲 TELEGRAM FUNCTION (DEBUG)
+# 📲TELEGRAM FUNCTION
 # =========================
 
 def send_telegram(msg):
     try:
-        r = requests.post(
+        requests.post(
             f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
             data={"chat_id": CHAT_ID, "text": msg}
         )
-        print("Telegram response:", r.text)
+        print("Telegram sent ")
     except Exception as e:
         print("Telegram error:", e)
 
 # =========================
-# 📱 SMS FUNCTION (DEBUG)
+# 📱 SMS FUNCTION
 # =========================
 
 client = Client(TWILIO_SID, TWILIO_AUTH)
 
 def send_sms(msg):
     try:
-        message = client.messages.create(
+        client.messages.create(
             body=msg,
             from_=TWILIO_PHONE,
             to=YOUR_PHONE
         )
-        print("SMS sent SID:", message.sid)
+        print("SMS sent ✅")
     except Exception as e:
         print("SMS error:", e)
 
 # =========================
-# 🚀 TEST MODE
+#  CHECK FUNCTION
 # =========================
 
-print("🚀 TEST MODE STARTED")
+def check_tickets():
+    try:
+        res = requests.get(URL, allow_redirects=True, timeout=10)
+
+        final_url = res.url.lower()
+        text = res.text.lower()
+
+        if "ticketgenie" in final_url:
+            return "REDIRECT"
+
+        if "tickets" in text or "book now" in text:
+            return "CONTENT"
+
+        return "NONE"
+
+    except Exception as e:
+        print("Check error:", e)
+        return "ERROR"
+
+# =========================
+#  MAIN BOT
+# =========================
+
+already_alerted = False
+
+print(" RCB Ticket Bot Running...")
 
 while True:
     try:
-        print("\n--- TEST LOOP ---")
+        status = check_tickets()
+        print("Status:", status)
 
-        msg = "🚨 TEST ALERT FROM RCB BOT (RAILWAY)"
+        if status in ["REDIRECT", "CONTENT"] and not already_alerted:
+            msg = "🚨 RCB TICKETS MAY BE LIVE!\n\nCheck now:\nhttps://shop.royalchallengers.com"
 
-        send_telegram(msg)
-        send_sms(msg)
+            send_telegram(msg)
+            send_sms("🚨 RCB tickets LIVE! Check now!")
 
-        print("✅ TEST ALERT SENT")
+            already_alerted = True
 
     except Exception as e:
-        print("Error:", e)
+        print("Main loop error:", e)
 
-    time.sleep(30)  # avoid spam
+    time.sleep(10)
