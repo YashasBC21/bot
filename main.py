@@ -59,10 +59,10 @@ def check_tickets():
         final_url = res.url.lower()
         text = res.text.lower()
 
-        if "ticketgenie" in final_url:
+        if "ticket" in final_url:
             return "REDIRECT"
 
-        if "ticket" in text or "buy" in text:
+        if "tickets" in text or "buy" in text:
             return "CONTENT"
 
         return "NONE"
