@@ -62,7 +62,7 @@ def check_tickets():
         if "ticketgenie" in final_url:
             return "REDIRECT"
 
-        if "tickets" in text or "buy" in text:
+        if "ticket" in text or "buy" in text:
             return "CONTENT"
 
         return "NONE"
