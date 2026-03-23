@@ -44,12 +44,21 @@ def send_sms(msg):
 def check_tickets():
     try:
         res = requests.get(URL, headers=HEADERS, allow_redirects=True, timeout=10)
+
         final_url = res.url.lower()
         text = res.text.lower()
 
         if "/ticket" in final_url:
-            if "buy tickets" in text or "select seats" in text or "book now" in text:
+
+            # STRICT CONDITIONS
+            if (
+                "buy tickets" in text and
+                "disabled" not in text and
+                "sold out" not in text and
+                "coming soon" not in text
+            ):
                 return "LIVE"
+
             return "PAGE_ONLY"
 
         return "CLOSED"
@@ -68,7 +77,7 @@ while True:
         print("Status:", status)
 
         if status == "LIVE" and not already_alerted:
-            msg = "RCB tickets may be live. Check now: https://shop.royalchallengers.com"
+            msg = "RCB tickets are live. Check now: https://shop.royalchallengers.com"
             send_telegram(msg)
             send_sms("RCB tickets live. Check now.")
             already_alerted = True
