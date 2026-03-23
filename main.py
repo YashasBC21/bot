@@ -3,10 +3,6 @@ import time
 import os
 from twilio.rest import Client
 
-# =========================
-# LOAD ENV VARIABLES
-# =========================
-
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
@@ -17,23 +13,20 @@ YOUR_PHONE = os.getenv("YOUR_PHONE")
 
 URL = "https://shop.royalchallengers.com"
 
-# =========================
-# 📲TELEGRAM FUNCTION
-# =========================
+HEADERS = {
+    "User-Agent": "Mozilla/5.0"
+}
 
 def send_telegram(msg):
     try:
         requests.post(
             f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
-            data={"chat_id": CHAT_ID, "text": msg}
+            data={"chat_id": CHAT_ID, "text": msg},
+            timeout=10
         )
-        print("Telegram sent ")
+        print("Telegram sent")
     except Exception as e:
         print("Telegram error:", e)
-
-# =========================
-# 📱 SMS FUNCTION
-# =========================
 
 client = Client(TWILIO_SID, TWILIO_AUTH)
 
@@ -44,29 +37,20 @@ def send_sms(msg):
             from_=TWILIO_PHONE,
             to=YOUR_PHONE
         )
-        print("SMS sent ✅")
+        print("SMS sent")
     except Exception as e:
         print("SMS error:", e)
 
-# =========================
-#  CHECK FUNCTION
-# =========================
-
 def check_tickets():
     try:
-        res = requests.get(URL, allow_redirects=True, timeout=10)
-
+        res = requests.get(URL, headers=HEADERS, allow_redirects=True, timeout=10)
         final_url = res.url.lower()
         text = res.text.lower()
 
-        
-        if "shop.royalchallengers.com/ticket" in final_url:
-
-            
-            if "buy tickets" in text or "buy now" in text:
+        if "/ticket" in final_url:
+            if "buy tickets" in text or "select seats" in text or "book now" in text:
                 return "LIVE"
-
-            return "PAGE_ONLY"  # page exists but not live
+            return "PAGE_ONLY"
 
         return "CLOSED"
 
@@ -74,26 +58,23 @@ def check_tickets():
         print("Check error:", e)
         return "ERROR"
 
-# =========================
-#  MAIN BOT
-# =========================
-
 already_alerted = False
 
-print(" RCB Ticket Bot Running...")
+print("RCB Ticket Bot Running...")
 
 while True:
     try:
         status = check_tickets()
         print("Status:", status)
 
-        if status in ["REDIRECT", "CONTENT"] and not already_alerted:
-            msg = "🚨 RCB TICKETS MAY BE LIVE!\n\nCheck now:\nhttps://shop.royalchallengers.com"
-
+        if status == "LIVE" and not already_alerted:
+            msg = "RCB tickets may be live. Check now: https://shop.royalchallengers.com"
             send_telegram(msg)
-            send_sms("🚨 RCB tickets LIVE! Check now!")
-
+            send_sms("RCB tickets live. Check now.")
             already_alerted = True
+
+        elif status != "LIVE":
+            already_alerted = False
 
     except Exception as e:
         print("Main loop error:", e)
