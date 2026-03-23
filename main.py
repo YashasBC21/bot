@@ -59,13 +59,16 @@ def check_tickets():
         final_url = res.url.lower()
         text = res.text.lower()
 
-        if "ticket" in final_url:
-            return "REDIRECT"
+        
+        if "shop.royalchallengers.com/ticket" in final_url:
 
-        if "tickets" in text or "buy" in text:
-            return "CONTENT"
+            
+            if "buy tickets" in text or "buy now" in text:
+                return "LIVE"
 
-        return "NONE"
+            return "PAGE_ONLY"  # page exists but not live
+
+        return "CLOSED"
 
     except Exception as e:
         print("Check error:", e)
